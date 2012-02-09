@@ -20,6 +20,11 @@ RLINK = /home/fac/wrc/bin/rlink
 	$(RASM) -l $*.asm > $*.lst
 
 #
+# Object files to be created
+#
+OBJECTS = colony.obj input.obj 
+
+#
 # Transformation rule: .obj into .out
 #
 .obj.out:
@@ -28,4 +33,5 @@ RLINK = /home/fac/wrc/bin/rlink
 #
 # Main target
 #
-colony.out:	colony.obj
+colony.out:	$(OBJECTS)
+	$(RLINK) -m -o colony.out $(OBJECTS) > colony.map
