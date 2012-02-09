@@ -157,7 +157,7 @@ exit_program:
         lw      $s2, 8($sp)
         lw      $s1, 4($sp)
         lw      $s0, 0($sp)
-        addi    $sp, $sp, 16
+        addi    $sp, $sp, 32
         jr      $ra
 
 #

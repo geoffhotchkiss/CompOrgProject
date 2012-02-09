@@ -1,1 +1,2 @@
-Run using RSIM
+Run using RSIM:
+	$ /home/fac/wrc/bin/rsim colony.out
