@@ -22,7 +22,7 @@ RLINK = /home/fac/wrc/bin/rlink
 #
 # Object files to be created
 #
-OBJECTS = colony.obj input.obj 
+OBJECTS = colony.obj input.obj allocate.obj
 
 #
 # Transformation rule: .obj into .out
