@@ -137,4 +137,3 @@ ask_for_num_live_cells_B_again:
 				move $ra, $t0									# retrive ra to return to main
 				j ask_for_num_live_cells_B
 
-
