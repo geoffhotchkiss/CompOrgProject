@@ -16,8 +16,6 @@ into_msg:
 	.ascii   "\n**********************\n"
 	.ascii	   "****    Colony    ****\n"
 	.asciiz    "**********************\n\n"
-newline:
-	.asciiz "\n"
 start_generation_string:
 	.asciiz "\n====    GENERATION "
 end_generation_string: 
@@ -66,6 +64,20 @@ main:
 				jal allocate_mem
 				move $s5, $v0						# s5 is location of next generation array
 
+				li $a0, 4
+				li $a1, 4
+				move $a2, $s0
+				jal rowcol_to_num
+				move $a0, $v0
+				li $a1, 2
+				move $a2, $s4
+				jal set
+
+				.globl print_board
+				move $a0, $s4
+				move $a1, $s0
+				jal print_board
+
 				j exit_program
 
 exit_program:
@@ -92,14 +104,8 @@ exit_program:
 #
 	.globl print_number
 print_number:
-
         li 	$v0, PRINT_INT
         syscall			#print a0
-
-        la	$a0, newline
-        li      $v0, PRINT_STRING
-        syscall			#print a newline
-
         jr      $ra
 
 #
@@ -111,10 +117,8 @@ print_number:
 #
 	.globl print_string
 print_string:
-
         li 	$v0, PRINT_STRING
         syscall			#print a0
-
         jr      $ra
 
 # a0 is row
@@ -123,8 +127,28 @@ print_string:
 	.globl rowcol_to_num
 rowcol_to_num:
 				move $t0, $a2
-				addi $t0, $t0, -1
+				# addi $t0, $t0, -1
 				mul $v0, $a0, $t0
 				add $v0, $v0, $a1
 				li $t0, 4
 				mul $v0, $v0, $t0
+				jr $ra
+
+# a0 location to insert
+# a1 value to insert
+# a2 is location of array
+	.globl set
+set:
+				add $t0, $a2, $a0
+				sw $a1, 0($t0)
+				jr $ra
+
+# a0 location to get
+# a1 array location
+	.globl get
+get: 
+				add $t0, $a1, $a0
+				lw $v0, 0($t0)
+				jr $ra
+				
+
