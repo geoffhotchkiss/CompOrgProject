@@ -64,6 +64,15 @@ main:
 				jal allocate_mem
 				move $s5, $v0						# s5 is location of next generation array
 
+				# initialize the arrays
+				move $a0, $s4
+				mul $a1, $s0, $s0
+				jal init_array
+				move $a0, $s5
+				mul $a1, $s0, $s0
+				jal init_array
+
+
 				li $a0, 4
 				li $a1, 4
 				move $a2, $s0
@@ -152,3 +161,22 @@ get:
 				jr $ra
 				
 
+	.globl init_array
+# Initializes an array to all zeros
+# a0 location of array to initialize
+# a1 size of array
+init_array:
+			move $t0, $a0
+			move $t1, $a1
+			li $t3, 1
+
+init_array_loop:
+			beq $t2, $t1, init_array_done
+			sw $zero, 0($t0)
+			addi $t0, $t0, 4
+			addi $t2, $t2, 1
+			j init_array_loop
+
+init_array_done:
+			jr $ra
+	
