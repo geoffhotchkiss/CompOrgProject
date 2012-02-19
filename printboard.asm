@@ -13,6 +13,7 @@ board_top_bottom:
 	.asciiz "-"
 board_side:
 	.asciiz "|"
+	.globl newline
 newline:
 	.asciiz "\n"
 

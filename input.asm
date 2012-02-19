@@ -24,9 +24,9 @@ num_live_cells_B_string:
 num_live_cells_error_string:
 	.asciiz "\nWARNING: illegal number of live cells, try again: "
 enter_locations_string:
-	.asciiz "\nStart entering locations"
+	.asciiz "\nStart entering locations\n"
 enter_locations_error_string:
-	.asciiz "\nERROR: illegal point location"
+	.asciiz "\nERROR: illegal point location\n"
 
 	.text
 	.align	2
@@ -34,6 +34,7 @@ enter_locations_error_string:
 	.globl 	ask_for_num_generations_init
 	.globl 	ask_for_num_live_cells_A_init
 	.globl 	ask_for_num_live_cells_B_init
+	.globl 	ask_for_starting_locations_init
 	.globl 	print_string
 	.globl 	print_number
 
@@ -136,4 +137,64 @@ ask_for_num_live_cells_B_again:
 				jal print_string
 				move $ra, $t0									# retrive ra to return to main
 				j ask_for_num_live_cells_B
+
+
+# a0 is board location
+# a1 is number alive
+# a2 is width
+# a3 is what to place
+ask_for_starting_locations_init:
+				addi $sp, $sp, -20
+				sw $s0, 0($sp)
+				sw $s1, 4($sp)
+				sw $s2, 8($sp)
+				sw $s3, 12($sp)
+				sw $ra, 16($sp)
+				move $s0, $a0		# board locations
+				move $s1, $a1		# number alive
+				move $s2, $a2		# width
+				move $s3, $a3		# what to place
+				la $a0, enter_locations_string
+				jal print_string
+
+				li $t0, 0
+				move $t1, $s1
+
+ask_for_starting_locations_loop:
+				beq $t0, $t1, ask_for_starting_locations_done
+				la	$v0, READ_INT
+				syscall
+				move	$t2, $v0
+
+				la	$v0, READ_INT
+				syscall
+				move	$t3, $v0
+
+				blt $t2, $zero, ask_for_starting_locations_error
+				bge $t2, $s2, ask_for_starting_locations_error
+				blt $t3, $zero, ask_for_starting_locations_error
+				bge $t3, $s2, ask_for_starting_locations_error
+				addi $t0, $t0, 1
+				j ask_for_starting_locations_loop
+
+ask_for_starting_locations_error:
+				la $a0, enter_locations_error_string
+				jal print_string
+				lw $s0, 0($sp)
+				lw $s1, 4($sp)
+				lw $s2, 8($sp)
+				lw $s3, 12($sp)
+				lw $ra, 16($sp)
+				addi $sp, $sp, 20
+				.globl exit_program
+				j exit_program
+
+ask_for_starting_locations_done:
+				lw $s0, 0($sp)
+				lw $s1, 4($sp)
+				lw $s2, 8($sp)
+				lw $s3, 12($sp)
+				lw $ra, 16($sp)
+				addi $sp, $sp, 20
+				jr $ra
 

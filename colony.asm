@@ -15,7 +15,7 @@ MIN_CELLS_ALIVE = 0
 into_msg:
 	.ascii   "\n**********************\n"
 	.ascii	   "****    Colony    ****\n"
-	.asciiz    "**********************\n\n"
+	.asciiz    "**********************\n"
 start_generation_string:
 	.asciiz "\n====    GENERATION "
 end_generation_string: 
@@ -31,7 +31,7 @@ end_generation_string:
 main:
         addi    $sp, $sp, -32# space for return address/doubleword aligned
         sw      $ra, 28($sp)    # store the ra on the stack
-				sw 			$s6, 24($sp)
+				sw 			$s6, 24($sp)		# location of the neighbors array
 				sw 			$s5, 20($sp)		# location of next generation array
 				sw 			$s4, 16($sp)		# location of current generation array
 				sw 			$s3, 12($sp)		# number of cells alive in B
@@ -44,17 +44,6 @@ main:
 				.globl ask_for_board_size_init
 				jal ask_for_board_size_init
 				move $s0, $v0						# s0 is board size
-				.globl ask_for_num_generations_init
-				jal ask_for_num_generations_init
-				move $s1, $v0						# s1 is number of generations
-				move $a0, $s0
-				.globl ask_for_num_live_cells_A_init
-				jal ask_for_num_live_cells_A_init
-				move $s2, $v0						# s2 is number of cells alive in A
-				.globl ask_for_num_live_cells_B_init
-				move $a0, $s0
-				jal ask_for_num_live_cells_B_init
-				move $s3, $v0						# s3 is number of cells alive in B
 
 				.globl allocate_mem
 				mul $a0, $s0, $s0				
@@ -72,23 +61,92 @@ main:
 				mul $a1, $s0, $s0
 				jal init_array
 
+				.globl ask_for_num_generations_init
+				jal ask_for_num_generations_init
+				move $s1, $v0						# s1 is number of generations
+				move $a0, $s0
+				.globl ask_for_num_live_cells_A_init
+				jal ask_for_num_live_cells_A_init
+				move $s2, $v0						# s2 is number of cells alive in A
 
-				li $a0, 4
-				li $a1, 4
+				.globl ask_for_starting_locations_init
+				move $a0, $s4
+				move $a1, $s2
 				move $a2, $s0
-				jal rowcol_to_num
-				move $a0, $v0
-				li $a1, 2
-				move $a2, $s4
-				jal set
+				li $a3, 1
+				jal ask_for_starting_locations_init
+
+				.globl ask_for_num_live_cells_B_init
+				move $a0, $s0
+				jal ask_for_num_live_cells_B_init
+				move $s3, $v0						# s3 is number of cells alive in B
+
+				move $a0, $s4
+				move $a1, $s3
+				move $a2, $s0
+				li $a3, 2
+				jal ask_for_starting_locations_init
+
+				
+				# li $a0, 4
+				# li $a1, 4
+				# move $a2, $s0
+				# jal rowcol_to_num
+				# move $a0, $v0
+				# li $a1, 2
+				# move $a2, $s4
+				# jal set
+
+
+print_generations:
+				la $a0, start_generation_string
+				jal print_string
+				move $a0, $zero
+				jal print_number
+				la $a0, end_generation_string
+				jal print_string
+				.globl newline
+				la $a0, newline
+				jal print_string
 
 				.globl print_board
 				move $a0, $s4
 				move $a1, $s0
 				jal print_board
 
+				li $t4, 1
+				addi $t5, $s1, 1
+
+print_generations_loop:
+				beq $t4, $t5, print_generations_done
+				la $a0, start_generation_string
+				jal print_string
+				move $a0, $t4
+				jal print_number
+				la $a0, end_generation_string
+				jal print_string
+				la $a0, newline
+				jal print_string
+
+				# get neighbors
+				# count neighbors
+				# set alive or dead on second board
+				move $t0, $s4
+				move $s4, $s5
+				move $s5, $t0
+				move $a0, $s4
+				move $a1, $s0
+				jal print_board
+
+				addi $t4, $t4, 1
+				j print_generations_loop
+
+print_generations_done:
+				la $a0, newline
+				jal print_string
 				j exit_program
 
+	.globl exit_program
 exit_program:
         #
         # Now exit the program.
@@ -179,4 +237,94 @@ init_array_loop:
 
 init_array_done:
 			jr $ra
+	
+
+# a0 is row
+# a1 is col
+# a2 is width of board
+# a3 is location of where to store
+	.globl get_neighbor_locations
+get_neighbor_locations:
+	addi $sp, $sp, -20
+	sw $ra, 16($sp)
+	sw $s3, 12($sp)
+	sw $s2, 8($sp)
+	sw $s1, 4($sp)
+	sw $s0, 0($sp)
+
+	move $s0, $a0		# row
+	move $s1, $a1		# col
+	move $s2, $a2		# width
+	move $s3, $a3		# location
+
+get_neighbor_locations_loop_1_init:
+	li $t0, 0
+	li $t1, 3
+	addi $a0, $s0, -1	# row - 1 
+	add $a0, $a0, $s2	# row - 1 + size
+	rem $a0, $a0, $s2	# row - 1 + size % size
+	addi $a1, $s1, -1	# col - 1
+
+get_neighbor_locations_loop_1:
+	beq $t0, $t1, get_neighbor_locations_loop_2_init
+	add $a1, $a1, $s2	# col - 1 + size
+	rem $a1, $a1, $s2	# col - 1 + size % size
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
+	addi $s3, $s3, 4
+	addi $a1, 1
+	addi $t0, 1
+	j get_neighbor_locations_loop_1
+
+get_neighbor_locations_loop_2_init:
+	li $t0, 0
+	li $t1, 2
+	addi $a0, $s0, 0	# row + 0 
+	add $a0, $a0, $s2	# row + 0 + size
+	rem $a0, $a0, $s2	# row + 0 + size % size
+	addi $a1, $s1, -1	# col - 1
+
+get_neighbor_locations_loop_2:
+	beq $t0, $t1, get_neighbor_locations_loop_3_init
+	add $a1, $a1, $s2	# col - 1 + size
+	rem $a1, $a1, $s2	# col - 1 + size % size
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
+	addi $s3, $s3, 4
+	addi $a1, 2
+	addi $t0, 1
+	j get_neighbor_locations_loop_2
+
+get_neighbor_locations_loop_3_init:
+	li $t0, 0
+	li $t1, 3
+	addi $a0, $s0, 1	# row + 1 
+	add $a0, $a0, $s2	# row + 1 + size
+	rem $a0, $a0, $s2	# row + 1 + size % size
+	addi $a1, $s1, -1	# col - 1
+
+get_neighbor_locations_loop_3:
+	beq $t0, $t1, get_neighbor_locations_done
+	add $a1, $a1, $s2	# col - 1 + size
+	rem $a1, $a1, $s2	# col - 1 + size % size
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
+	addi $s3, $s3, 4
+	addi $a1, 1
+	addi $t0, 1
+	j get_neighbor_locations_loop_3
+
+get_neighbor_locations_done:
+	lw $ra, 16($sp)
+	lw $s3, 12($sp)
+	lw $s2, 8($sp)
+	lw $s1, 4($sp)
+	lw $s0, 0($sp)
+	addi $sp, $sp, 20
+	jr $ra
+
+
 	
