@@ -87,11 +87,6 @@ main:
 				li $a3, 2
 				jal ask_for_starting_locations_init
 
-				la $a0, newline
-				jal print_string
-				la $a0, newline
-				jal print_string
-
 				# make array for storing neighbor locations
 				li $a0, 8
 				jal allocate_mem
@@ -154,6 +149,12 @@ print_generations_loop:
 				# get neighbors
 				# count neighbors
 				# set alive or dead on second board
+				move $a0, $s4
+				move $a1, $s5
+				move $a2, $s0
+				move $a3, $s6
+				jal get_next_generation
+
 				move $t0, $s4
 				move $s4, $s5
 				move $s5, $t0
@@ -412,6 +413,7 @@ get_neighbor_locations_done:
 # a0 - location of current generation
 # a1 - location of next generation
 # a2 - width
+# s3 - neighbors array
 get_next_generation:
 	addi $sp, $sp, -32
 	sw $s0, 0($sp)
@@ -423,6 +425,52 @@ get_next_generation:
 	sw $s6, 24($sp)
 	sw $ra, 28($sp)
 
+	move $s0, $a0		# s0 is location of current
+	move $s1, $a1		# s1 is location of next
+	move $s2, $a2		# s2 is width
+	move $s3, $a3		# s3 is neighbors array
+	li $s4, 0				# counters
+
+get_next_generation_loop_row:
+	beq $s4, $s2, get_next_generation_done
+	li $s5, 0
+
+get_next_generation_loop_col:
+	beq $s5, $s2, get_next_generation_loop_row_done
+	move $a0, $s4
+	move $a1, $s5
+	move $a2, $s2
+	move $a3, $s3
+	jal get_neighbor_locations
+	move $a0, $v0
+	move $a1, $s0
+	jal get_location_count
+	move $s6, $v0		# location count
+
+	move $a0, $s4
+	move $a1, $s5
+	jal rowcol_to_num
+	move $a0, $v0
+	move $a1, $s0
+	jal get					# contents of current cell
+	move $a0, $v0
+	move $a1, $s6
+	jal what_to_place
+	move $s6, $v0
+	move $a0, $s4
+	move $a1, $s5
+	jal rowcol_to_num
+	move $a0, $v0
+	move $a1, $s6
+	move $a2, $s1
+	jal set
+
+	addi $s5, $s5, 1
+	j get_next_generation_loop_col
+
+get_next_generation_loop_row_done:
+	addi $s4, $s4, 1
+	j get_next_generation_loop_row
 
 get_next_generation_done:
 	lw $s0, 0($sp)
@@ -433,7 +481,106 @@ get_next_generation_done:
 	lw $s5, 20($sp)
 	lw $s6, 24($sp)
 	lw $ra, 28($sp)
-	addi $sp, $sp, -28
+	addi $sp, $sp, 32
+	jr $ra
+
+# a0 - neighbor locations
+# a1 - array to count from
+get_location_count:
+	addi $sp, $sp, -24
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $ra, 20($sp)
+
+	move $s0, $a0
+	move $s1, $a1
+
+	li $s2, 0
+	li $s3, 8
+	li $s4, 0
+
+get_location_count_loop:
+	beq $s2, $s3, get_location_count_done
+	lw $a0, 0($s0)
+	move $a1, $s1
+	jal get
+	beq $v0, $zero, get_location_count_loop_end
+	li $t0, 1
+	beq $v0, $t0, get_location_count_loop_player1
+	li $t0, 2
+	beq $v0, $t0, get_location_count_loop_player2
+
+get_location_count_loop_player1:
+	addi $s4, $s4, 1
+	j get_location_count_loop_end
+
+get_location_count_loop_player2:
+	addi $s4, $s4, -1
+	j get_location_count_loop_end
+
+get_location_count_loop_end:
+	addi $s0, $s0, 4
+	addi $s2, $s2, 1
+	j get_location_count_loop
+
+
+get_location_count_done:
+	move $v0, $s4
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $ra, 20($sp)
+	addi $sp, $sp, 24
+	jr $ra
+
+# a0 - contents
+# a1 - count around
+what_to_place:
+	beq $a0, $zero, what_to_place_no_cell
+	li $t0, 1
+	beq $a0, $t0, what_to_place_player1_cell
+	li $t0, 2
+	beq $a0, $t0, what_to_place_player2_cell
+
+what_to_place_no_cell:
+	li $t0, 3
+	beq $a1, $t0, what_to_place_player1
+	li $t0, -3
+	beq $a1, $t0, what_to_place_player2
+	j what_to_place_none
+
+what_to_place_player1_cell:
+	li $t0, 2
+	beq $a1, $t0, what_to_place_player1
+	li $t0, 3
+	beq $a1, $t0, what_to_place_player1
+	j what_to_place_none
+
+what_to_place_player2_cell:
+	li $t0, -2
+	beq $a1, $t0, what_to_place_player2
+	li $t0, -3
+	beq $a1, $t0, what_to_place_player2
+	j what_to_place_none
+
+what_to_place_none:
+	li $v0, 0
+	j what_to_place_done
+
+what_to_place_player1:
+	li $v0, 1
+	j what_to_place_done
+
+what_to_place_player2:
+	li $v0, 2
+	j what_to_place_done
+
+what_to_place_done:
 	jr $ra
 
 
