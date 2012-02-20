@@ -87,7 +87,23 @@ main:
 				li $a3, 2
 				jal ask_for_starting_locations_init
 
-				
+				la $a0, newline
+				jal print_string
+				la $a0, newline
+				jal print_string
+
+				# make array for storing neighbor locations
+				li $a0, 8
+				jal allocate_mem
+				move $s6, $v0
+
+				li $a0, 1
+				li $a1, 1
+				move $a2, $s0
+				move $a3, $s6
+				jal get_neighbor_locations
+				move $t0, $v0
+
 				# li $a0, 1
 				# li $a1, 1
 				# move $a2, $s0
@@ -270,67 +286,121 @@ get_neighbor_locations:
 	move $s2, $a2		# width
 	move $s3, $a3		# location
 
-get_neighbor_locations_loop_1_init:
-	li $t0, 0
-	li $t1, 3
-	addi $a0, $s0, -1	# row - 1 
-	add $a0, $a0, $s2	# row - 1 + size
-	rem $a0, $a0, $s2	# row - 1 + size % size
-	addi $a1, $s1, -1	# col - 1
-
-get_neighbor_locations_loop_1:
-	beq $t0, $t1, get_neighbor_locations_loop_2_init
-	add $a1, $a1, $s2	# col - 1 + size
-	rem $a1, $a1, $s2	# col - 1 + size % size
+	# -1, -1
+	addi $t0, $s0, -1
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, -1
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
 	move $a2, $s2
 	jal rowcol_to_num
 	sw $v0, 0($s3)
 	addi $s3, $s3, 4
-	addi $a1, 1
-	addi $t0, 1
-	j get_neighbor_locations_loop_1
 
-get_neighbor_locations_loop_2_init:
-	li $t0, 0
-	li $t1, 2
-	addi $a0, $s0, 0	# row + 0 
-	add $a0, $a0, $s2	# row + 0 + size
-	rem $a0, $a0, $s2	# row + 0 + size % size
-	addi $a1, $s1, -1	# col - 1
-
-get_neighbor_locations_loop_2:
-	beq $t0, $t1, get_neighbor_locations_loop_3_init
-	add $a1, $a1, $s2	# col - 1 + size
-	rem $a1, $a1, $s2	# col - 1 + size % size
+	# -1, 0
+	addi $t0, $s0, -1
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, 0
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
 	move $a2, $s2
 	jal rowcol_to_num
 	sw $v0, 0($s3)
 	addi $s3, $s3, 4
-	addi $a1, 2
-	addi $t0, 1
-	j get_neighbor_locations_loop_2
 
-get_neighbor_locations_loop_3_init:
-	li $t0, 0
-	li $t1, 3
-	addi $a0, $s0, 1	# row + 1 
-	add $a0, $a0, $s2	# row + 1 + size
-	rem $a0, $a0, $s2	# row + 1 + size % size
-	addi $a1, $s1, -1	# col - 1
 
-get_neighbor_locations_loop_3:
-	beq $t0, $t1, get_neighbor_locations_done
-	add $a1, $a1, $s2	# col - 1 + size
-	rem $a1, $a1, $s2	# col - 1 + size % size
+	# -1, 1
+	addi $t0, $s0, -1
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, 1
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
 	move $a2, $s2
 	jal rowcol_to_num
 	sw $v0, 0($s3)
 	addi $s3, $s3, 4
-	addi $a1, 1
-	addi $t0, 1
-	j get_neighbor_locations_loop_3
+
+	# 0, -1
+	addi $t0, $s0, 0
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, -1
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
+	addi $s3, $s3, 4
+
+	# 0, 1
+	addi $t0, $s0, 0
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, 1
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
+	addi $s3, $s3, 4
+	
+	# 1, -1
+	addi $t0, $s0, 1
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, -1
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
+	addi $s3, $s3, 4
+
+	# 1, 0
+	addi $t0, $s0, 1
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, 0
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
+	addi $s3, $s3, 4
+
+	# 1, 1
+	addi $t0, $s0, 1
+	add $t0, $t0, $s2
+	rem $t0, $t0, $s2
+	addi $t1, $s1, 1
+	add $t1, $t1, $s2
+	rem $t1, $t1, $s2
+	move $a0, $t0
+	move $a1, $t1
+	move $a2, $s2
+	jal rowcol_to_num
+	sw $v0, 0($s3)
 
 get_neighbor_locations_done:
+	addi $s3, $s3, -28
+	move $v0, $s3
 	lw $ra, 16($sp)
 	lw $s3, 12($sp)
 	lw $s2, 8($sp)
@@ -339,5 +409,31 @@ get_neighbor_locations_done:
 	addi $sp, $sp, 20
 	jr $ra
 
+# a0 - location of current generation
+# a1 - location of next generation
+# a2 - width
+get_next_generation:
+	addi $sp, $sp, -32
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $ra, 28($sp)
 
-	
+
+get_next_generation_done:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $ra, 28($sp)
+	addi $sp, $sp, -28
+	jr $ra
+
+
