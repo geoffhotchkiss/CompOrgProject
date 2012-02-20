@@ -88,11 +88,14 @@ main:
 				jal ask_for_starting_locations_init
 
 				
-				# li $a0, 4
-				# li $a1, 4
+				# li $a0, 1
+				# li $a1, 1
 				# move $a2, $s0
 				# jal rowcol_to_num
-				# move $a0, $v0
+				# move $t0, $v0
+				# move $a0, $t0
+				# jal print_number
+				# move $a0, $t0
 				# li $a1, 2
 				# move $a2, $s4
 				# jal set

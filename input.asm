@@ -144,24 +144,26 @@ ask_for_num_live_cells_B_again:
 # a2 is width
 # a3 is what to place
 ask_for_starting_locations_init:
-				addi $sp, $sp, -20
+				addi $sp, $sp, -28
 				sw $s0, 0($sp)
 				sw $s1, 4($sp)
 				sw $s2, 8($sp)
 				sw $s3, 12($sp)
-				sw $ra, 16($sp)
-				move $s0, $a0		# board locations
+				sw $s4, 16($sp)
+				sw $s5, 20($sp)
+				sw $ra, 24($sp)
+				move $s0, $a0		# board location
 				move $s1, $a1		# number alive
 				move $s2, $a2		# width
 				move $s3, $a3		# what to place
 				la $a0, enter_locations_string
 				jal print_string
 
-				li $t0, 0
-				move $t1, $s1
+				li $s4, 0
+				move $s5, $s1
 
 ask_for_starting_locations_loop:
-				beq $t0, $t1, ask_for_starting_locations_done
+				beq $s4, $s5, ask_for_starting_locations_done
 				la	$v0, READ_INT
 				syscall
 				move	$t2, $v0
@@ -174,7 +176,28 @@ ask_for_starting_locations_loop:
 				bge $t2, $s2, ask_for_starting_locations_error
 				blt $t3, $zero, ask_for_starting_locations_error
 				bge $t3, $s2, ask_for_starting_locations_error
-				addi $t0, $t0, 1
+				move $a0, $t2
+				move $a1, $t3
+				move $a2, $s2
+				.globl rowcol_to_num
+				jal rowcol_to_num
+				move $t0, $v0
+				move $t2, $t0
+				# move $a0, $t0
+				# jal print_number
+				move $a0, $t0
+				move $a1, $s0
+				.globl get
+				jal get
+				move $t0, $v0
+				bne $t0, $zero, ask_for_starting_locations_error
+				move $a0, $t2
+				move $a1, $s3
+				move $a2, $s0
+				.globl set
+				jal set
+
+				addi $s4, $s4, 1
 				j ask_for_starting_locations_loop
 
 ask_for_starting_locations_error:
@@ -184,8 +207,10 @@ ask_for_starting_locations_error:
 				lw $s1, 4($sp)
 				lw $s2, 8($sp)
 				lw $s3, 12($sp)
-				lw $ra, 16($sp)
-				addi $sp, $sp, 20
+				lw $s4, 16($sp)
+				lw $s5, 20($sp)
+				lw $ra, 24($sp)
+				addi $sp, $sp, 28
 				.globl exit_program
 				j exit_program
 
@@ -194,7 +219,9 @@ ask_for_starting_locations_done:
 				lw $s1, 4($sp)
 				lw $s2, 8($sp)
 				lw $s3, 12($sp)
-				lw $ra, 16($sp)
-				addi $sp, $sp, 20
+				lw $s4, 16($sp)
+				lw $s5, 20($sp)
+				lw $ra, 24($sp)
+				addi $sp, $sp, 28
 				jr $ra
 
