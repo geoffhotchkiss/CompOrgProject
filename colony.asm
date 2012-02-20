@@ -116,7 +116,11 @@ print_generations:
 				move $a0, $s4
 				move $a1, $s0
 				jal print_board
+				beq $s1, $zero, print_generations_skip_newline
+				la $a0, newline
+				jal print_string
 
+print_generations_skip_newline:
 				li $t4, 1
 				addi $t5, $s1, 1
 
@@ -142,6 +146,12 @@ print_generations_loop:
 				jal print_board
 
 				addi $t4, $t4, 1
+				bne $t4, $t5, print_generations_loop_newline
+				j print_generations_loop
+
+print_generations_loop_newline:
+				la $a0, newline
+				jal print_string
 				j print_generations_loop
 
 print_generations_done:

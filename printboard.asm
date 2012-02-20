@@ -112,8 +112,8 @@ print_board_bottom:
 print_board_bottom_done:
 				la $a0, board_corner
 				jal print_string
-				la $a0, newline
-				jal print_string
+				# la $a0, newline
+				# jal print_string
 				move $t1, $zero
 
 
