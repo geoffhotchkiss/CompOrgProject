@@ -22,7 +22,7 @@ RLINK = /home/fac/wrc/bin/rlink
 #
 # Object files to be created
 #
-OBJECTS = colony.obj input.obj allocate.obj printboard.obj
+OBJECTS = colony.obj input.obj allocate.obj printboard.obj get_neighbor_locations.obj
 
 #
 # Transformation rule: .obj into .out
