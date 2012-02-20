@@ -2,4 +2,5 @@
 *.map
 *.out
 *.obj
+*.swp
 simplify.asm
